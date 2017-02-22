@@ -1,6 +1,8 @@
 package com.pixelcised.demorestfulfriendship.Model;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.pixelcised.demorestfulfriendship.Model.Entity.Subscription;
 import com.pixelcised.demorestfulfriendship.exception.FriendshipException;
@@ -105,5 +107,39 @@ public class SubscriptionManager {
 	    }
 	}
 
+	/*
+	 * Queries for a list of Subscriptions in table Subscription
+	 * */
+	public List<Subscription> getSubscriberList(String userID) throws SQLException {
+		
+		List<Subscription> subscriptionList = new ArrayList<Subscription>();
+		Connection con = DatabaseConnectionManager.getDBConnection();
+	    Statement stmt = null;
+		
+	    try {
+		    String query = "SELECT requestor from " + 
+		    		DatabaseConnectionManager.getFreeDBName() + "." + entityTableName + 
+		    		" WHERE target='" + userID +"'";
+	    	System.out.println("query = " + query);
+	    	
+	        stmt = con.createStatement();
+	        ResultSet rs = stmt.executeQuery(query);
+	        while (rs.next()) {
+	        	// Subscription.target is null in this case
+	        	subscriptionList.add(new Subscription(rs.getString("requestor")));
+	        }
+	        return subscriptionList;
+	    }
+	    catch (SQLException e ) {
+	        System.out.println(e.toString());
+	        throw e;
+	    }
+	    finally {
+	        if (stmt != null) {
+	        	stmt.close();
+	        }
+	    }
+	    
+	}
 	
 }
