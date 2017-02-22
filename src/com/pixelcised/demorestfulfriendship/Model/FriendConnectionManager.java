@@ -7,6 +7,8 @@ import java.util.List;
 import com.pixelcised.demorestfulfriendship.Model.Entity.FriendConnection;
 import com.pixelcised.demorestfulfriendship.exception.FriendshipException;
 import com.pixelcised.demorestfulfriendship.net.DatabaseConnectionManager;
+import com.pixelcised.demorestfulfriendship.Model.BlockageManager;
+import com.pixelcised.demorestfulfriendship.Model.Entity.Blockage;
 
 public class FriendConnectionManager {
 	
@@ -24,6 +26,16 @@ public class FriendConnectionManager {
 	    	// prevent double-befriending for cleanliness sake
 	    	if(hasFriendConnection(fc) == true) {
 	    		throw new FriendshipException("Cannot add friend connection because already connected");
+	    	}
+	    	else {
+		    	// check for blockage status
+	    		// both directions of blockage are valid between 2 users
+		    	BlockageManager bm = new BlockageManager(); 
+		    	Blockage blocDirection1 = new Blockage(fc.getUserID(), fc.getFriendID());
+		    	Blockage blocDirection2 = new Blockage(fc.getFriendID(), fc.getUserID());
+		    	if(bm.hasBlockage(blocDirection1) || bm.hasBlockage(blocDirection2)) {
+		    		throw new FriendshipException("Cannot add friend connection because one party has blocked the other");
+		    	}
 	    	}
 	    	
 		    boolean success = true;
