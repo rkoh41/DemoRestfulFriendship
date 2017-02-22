@@ -118,6 +118,41 @@ public class FriendConnectionManager {
 	    
 	}
 	
-
+	/*
+	 * Queries for a list of mutual friend records in table Connection, given 2 email IDs
+	 * */
+	public List<FriendConnection> getCommonFriends(FriendConnection fc) throws SQLException {
+		
+		List<FriendConnection> friendList = new ArrayList<FriendConnection>();
+		Connection con = DatabaseConnectionManager.getDBConnection();
+	    Statement stmt = null;
+		
+	    try {
+		    String query = "SELECT friendID FROM " + 
+		    		DatabaseConnectionManager.getFreeDBName() + "." + entityTableName + 
+		    		" WHERE userID IN ( '" + fc.getUserID() + "', '" + fc.getFriendID() + "'" + 
+		    		" ) GROUP BY friendID HAVING COUNT(friendID) >= 2";
+	    	System.out.println("query = " + query);
+	    	
+	        stmt = con.createStatement();
+	        ResultSet rs = stmt.executeQuery(query);
+	        while (rs.next()) {
+	        	// FriendConnection.userID is null in this case
+	        	friendList.add(new FriendConnection(rs.getString("friendID")));
+	        }
+	        return friendList;
+	    }
+	    catch (SQLException e ) {
+	        System.out.println(e.toString());
+	        throw e;
+	    }
+	    finally {
+	        if (stmt != null) {
+	        	stmt.close();
+	        }
+	    }
+	    		
+	}
+	
 	
 }

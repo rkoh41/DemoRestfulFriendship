@@ -137,6 +137,63 @@ public class FriendConnectionController {
 		
 	}
 	
+	// demo requirement #3 retrieve common connections between 2 email ids
+	@POST
+	@Produces("application/json")
+	@Path("/commonfriends")
+	public Response commonfriends(@QueryParam("jsonString") String jsonString) {
+		
+		System.out.println("jsonString is " + jsonString);
+		
+		JsonObject jo = null;
+		
+		try {
+			// parse urlencoded json string param
+			JsonParser jp = new JsonParser();
+			jo = (JsonObject)jp.parse(jsonString);
+			
+			// ensure exactly 2 email IDs are found in json object
+			JsonArray jeFriendsArray = jo.getAsJsonArray("friends");
+			if(jeFriendsArray == null || jeFriendsArray.size() != 2) {
+				JsonObject responseObj = ResponseUtil.createStandardErrorResponse(1509, "Incorrect number of parameters");
+				return Response.status(Response.Status.BAD_REQUEST).entity(responseObj.toString()).build();
+			}
+			else {
+				String email1 = jeFriendsArray.get(0).getAsString();
+				String email2 = jeFriendsArray.get(1).getAsString();
+				
+				// invoke data manager using designated entity
+				FriendConnection fc = new FriendConnection(email1, email2);
+				FriendConnectionManager fcm = new FriendConnectionManager();
+				List<FriendConnection> friendList = fcm.getCommonFriends(fc);
+				
+				// store friendIDs into a separate JsonArray
+				// because List<FriendConnection> does not print correctly without further serializing (band-aid solution)
+				JsonArray ja = new JsonArray();
+				for ( int i = 0; i < friendList.size(); i++ ) {
+					ja.add(friendList.get(i).getFriendID());
+				}
+				
+				// construct json response
+				JsonObject responseObj = new JsonObject();
+				responseObj.addProperty("success", true);
+				responseObj.add("friends", ja);
+				responseObj.addProperty("count", friendList.size());
+				
+				return Response.status(Response.Status.OK).entity(responseObj.toString()).build();
+			}			
+			
+		}
+		catch (JsonParseException jse) {
+			JsonObject responseObj = ResponseUtil.createStandardErrorResponse(1023, "JSON Syntax Error");
+			return Response.status(Response.Status.BAD_REQUEST).entity(responseObj.toString()).build();
+		}
+		catch (Exception e) {
+			JsonObject responseObj = ResponseUtil.createStandardErrorResponse(9999, "Unknown Error");
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseObj.toString()).build();
+		}
+		
+	}
 
 	
 }
