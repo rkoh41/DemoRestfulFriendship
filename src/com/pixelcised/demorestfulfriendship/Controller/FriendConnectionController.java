@@ -18,6 +18,8 @@ import com.pixelcised.demorestfulfriendship.Model.Entity.FriendConnection;
 import com.pixelcised.demorestfulfriendship.Model.FriendConnectionManager;
 import com.pixelcised.demorestfulfriendship.exception.FriendshipException;
 import com.pixelcised.demorestfulfriendship.utils.ResponseUtil;
+import com.pixelcised.demorestfulfriendship.Model.SubscriptionManager;
+import com.pixelcised.demorestfulfriendship.Model.Entity.Subscription;
 
 @Path("/friendconnection")
 public class FriendConnectionController {
@@ -61,6 +63,18 @@ public class FriendConnectionController {
 				boolean success2 = fcm.addFriendConnection(fc2);
 				
 				if(success1 || success2) {
+					/* 
+					 * Richard (22feb2017)
+					 * Revisited this controller when Subscription class got invented.
+					 * It should now make sense that upon successful adding of friends, 
+					 * we should automatically subscribe them to each other
+					 */
+					SubscriptionManager sm = new SubscriptionManager();
+					Subscription subsDirection1 = new Subscription(email1, email2);
+					Subscription subsDirection2 = new Subscription(email2, email1);
+					sm.addSubscription(subsDirection1);
+					sm.addSubscription(subsDirection2);
+					
 					return Response.status(Response.Status.OK).entity(ResponseUtil.createSuccessResponse().toString()).build();
 				}
 				else {
