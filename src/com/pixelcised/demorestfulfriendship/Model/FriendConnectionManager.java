@@ -1,6 +1,8 @@
 package com.pixelcised.demorestfulfriendship.Model;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.pixelcised.demorestfulfriendship.Model.Entity.FriendConnection;
 import com.pixelcised.demorestfulfriendship.exception.FriendshipException;
@@ -81,5 +83,41 @@ public class FriendConnectionManager {
 	    }
 	    
 	}
+	
+	/*
+	 * Queries for a list of friendIDs in table Connection given userID
+	 * */
+	public List<FriendConnection> getFriendList(String userID) throws SQLException {
+		
+		List<FriendConnection> friendList = new ArrayList<FriendConnection>();
+		Connection con = DatabaseConnectionManager.getDBConnection();
+	    Statement stmt = null;
+		
+	    try {
+		    String query = "SELECT userID, friendID from " + 
+		    		DatabaseConnectionManager.getFreeDBName() + "." + entityTableName + 
+		    		" WHERE userID='" + userID +"'";
+	    	System.out.println("query = " + query);
+	    	
+	        stmt = con.createStatement();
+	        ResultSet rs = stmt.executeQuery(query);
+	        while (rs.next()) {
+	        	friendList.add(new FriendConnection(rs.getString("userID"), rs.getString("friendID")));
+	        }
+	        return friendList;
+	    }
+	    catch (SQLException e ) {
+	        System.out.println(e.toString());
+	        throw e;
+	    }
+	    finally {
+	        if (stmt != null) {
+	        	stmt.close();
+	        }
+	    }
+	    
+	}
+	
+
 	
 }

@@ -1,5 +1,7 @@
 package com.pixelcised.demorestfulfriendship.Controller;
 
+import java.util.List;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -7,6 +9,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
@@ -44,6 +47,11 @@ public class FriendConnectionController {
 				String email1 = jeFriendsArray.get(0).getAsString();
 				String email2 = jeFriendsArray.get(1).getAsString();
 				
+				/*
+				 * Richard pending issues
+				 * Should regex validate email address format as part of logic and then tests
+				 * */
+				
 				FriendConnection fc1 = new FriendConnection(email1, email2);
 				FriendConnection fc2 = new FriendConnection(email2, email1);
 				
@@ -75,5 +83,60 @@ public class FriendConnectionController {
 		}
 		
 	}
+	
+	// demo requirement #2 retrieve connections of 1 email id
+	@POST
+	@Produces("application/json")
+	@Path("/friendlist")
+	public Response friendlist(@QueryParam("jsonString") String jsonString) {
+		
+		System.out.println("jsonString is " + jsonString);
+		
+		JsonObject jo = null;
+		
+		try {
+			// parse urlencoded json string param
+			JsonParser jp = new JsonParser();
+			jo = (JsonObject)jp.parse(jsonString);
+			
+			// ensure expected field is found in json object
+			// ensure email format validation is performed since the field name is "email" (not done)
+			JsonElement je = jo.get("email");
+			if(je == null) {
+				JsonObject responseObj = ResponseUtil.createStandardErrorResponse(1531, "Incorrect parameters");
+				return Response.status(Response.Status.BAD_REQUEST).entity(responseObj.toString()).build();
+			}
+			
+			// invoke data manager using userID
+			FriendConnectionManager fcm = new FriendConnectionManager();
+			List<FriendConnection> friendList = fcm.getFriendList(je.getAsString());
+			
+			// store friendIDs into a separate JsonArray
+			// because List<FriendConnection> does not print correctly without further serializing (band-aid solution)
+			JsonArray ja = new JsonArray();
+			for ( int i = 0; i < friendList.size(); i++ ) {
+				ja.add(friendList.get(i).getFriendID());
+			}
+			
+			// construct json response
+			JsonObject responseObj = new JsonObject();
+			responseObj.addProperty("success", true);
+			responseObj.add("friends", ja);
+			responseObj.addProperty("count", friendList.size());
+			
+			return Response.status(Response.Status.OK).entity(responseObj.toString()).build();
+		}
+		catch (JsonParseException jse) {
+			JsonObject responseObj = ResponseUtil.createStandardErrorResponse(1023, "JSON Syntax Error");
+			return Response.status(Response.Status.BAD_REQUEST).entity(responseObj.toString()).build();
+		}
+		catch (Exception e) {
+			JsonObject responseObj = ResponseUtil.createStandardErrorResponse(9999, "Unknown Error");
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseObj.toString()).build();
+		}
+		
+	}
+	
+
 	
 }
