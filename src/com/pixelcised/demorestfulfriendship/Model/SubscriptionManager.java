@@ -78,4 +78,32 @@ public class SubscriptionManager {
 	    
 	}
 	
+	/*
+	 * Deletes a record from table Subscription
+	 * */
+	public boolean removeSubscription(Subscription subs) throws SQLException {
+		
+		Connection con = DatabaseConnectionManager.getDBConnection();
+	    Statement stmt = null;
+	    
+	    try {
+		    String query = "DELETE FROM " + DatabaseConnectionManager.getFreeDBName() + 
+		    		"." + entityTableName + " WHERE requestor='" + subs.getRequestor() + 
+		    		"' AND target='" + subs.getTarget() + "'";
+	        stmt = con.createStatement();
+	        stmt.executeUpdate(query);
+	        return true;
+	    }
+	    catch (SQLException e ) {
+	        System.out.println(e.toString());
+	        throw e;
+	    }
+	    finally {
+	        if (stmt != null) {
+	        	stmt.close();
+	        }
+	    }
+	}
+
+	
 }
